@@ -152,14 +152,12 @@ router.post("/book", protect, upload.single("referenceImage"), async (req, res) 
     await sendEmail({
       email: userEmail,
       subject: "Confirmação de Agendamento - Barbearia Top",
+      message: `Seu agendamento para ${newAppointment.serviceName} foi confirmado para ${new Date(newAppointment.date).toLocaleDateString("pt-BR", { timeZone: "UTC" })} às ${newAppointment.time}.`,
       html: emailMessage,
     });
     console.log(`Email de confirmação de agendamento enviado para ${userEmail}`);
   } catch (emailError) {
     console.error("Erro ao enviar email de confirmação de agendamento:", emailError);
-    // Log the error, but don't fail the appointment booking itself if email fails
-    // The main response will still indicate successful booking.
-    // Optionally, add a note to the user that email confirmation might be delayed.
   }
 
   res.status(201).json({

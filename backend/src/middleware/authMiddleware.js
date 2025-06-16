@@ -17,10 +17,17 @@ const protect = async (req, res, next) => {
       req.user = await User.findById(decoded.id).select("-password");
 
       if (!req.user) {
-        return res.status(401).json({ success: false, message: "Usuário não encontrado, token falhou." });
+        return res.status(401).json({ 
+          success: false, 
+          message: "Usuário não encontrado, token falhou." 
+        });
       }
+
       if (!req.user.isVerified) {
-        return res.status(401).json({ success: false, message: "Usuário não verificado. Por favor, verifique seu email primeiro." });
+        return res.status(401).json({ 
+          success: false, 
+          message: "Usuário não verificado. Por favor, verifique seu email primeiro." 
+        });
       }
 
       next();
@@ -28,21 +35,30 @@ const protect = async (req, res, next) => {
       console.error("Erro na autenticação do token:", error);
       // Handle specific JWT errors like TokenExpiredError or JsonWebTokenError
       if (error.name === "TokenExpiredError") {
-        return res.status(401).json({ success: false, message: "Não autorizado, token expirado." });
+        return res.status(401).json({ 
+          success: false, 
+          message: "Não autorizado, token expirado." 
+        });
       }
-      return res.status(401).json({ success: false, message: "Não autorizado, token inválido." });
+      return res.status(401).json({ 
+        success: false, 
+        message: "Não autorizado, token inválido." 
+      });
     }
   }
 
   if (!token) {
-    res.status(401).json({ success: false, message: "Não autorizado, nenhum token fornecido." });
+    return res.status(401).json({ 
+      success: false, 
+      message: "Não autorizado, nenhum token fornecido." 
+    });
   }
 };
 
 // Optional: Middleware for specific roles (if needed in the future)
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) { // Assuming a role field exists on User model
+    if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({ 
         success: false, 
         message: `Acesso negado. Usuário com role '${req.user ? req.user.role : 'desconhecida'}' não tem permissão para acessar este recurso.` 

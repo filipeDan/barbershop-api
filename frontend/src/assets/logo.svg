@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Círculo externo -->
+  <circle cx="100" cy="100" r="90" stroke="#D4AF37" stroke-width="4" fill="none"/>
+  
+  <!-- Tesoura estilizada -->
+  <path d="M60 70 L140 70" stroke="#D4AF37" stroke-width="4"/>
+  <path d="M70 50 L130 50" stroke="#D4AF37" stroke-width="4"/>
+  <path d="M80 30 L120 30" stroke="#D4AF37" stroke-width="4"/>
+  
+  <!-- Linha decorativa -->
+  <path d="M40 100 L160 100" stroke="#D4AF37" stroke-width="2" stroke-dasharray="4 4"/>
+  
+  <!-- Texto "BARBERSHOP" -->
+  <text x="100" y="150" text-anchor="middle" fill="#D4AF37" font-family="Arial" font-size="16" font-weight="bold">
+    BARBERSHOP
+  </text>
+</svg> 

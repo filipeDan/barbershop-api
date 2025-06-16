@@ -1,8 +1,12 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto"); // For generating tokens
-
+const crypto = require("crypto"); // gerar tokes
 const UserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Por favor, forneça um nome"],
+    trim: true,
+  },
   email: {
     type: String,
     required: [true, "Por favor, forneça um email"],
@@ -20,6 +24,19 @@ const UserSchema = new mongoose.Schema({
     minlength: [6, "A senha deve ter pelo menos 6 caracteres"],
     select: false, // Não retorna a senha por padrão
   },
+  phone: {
+    type: String,
+    trim: true,
+  },
+  role: {
+    type: String,
+    enum: ["user", "barber", "admin"],
+    default: "user",
+  },
+  avatar: {
+    type: String,
+    default: "default-avatar.png",
+  },
   isVerified: {
     type: Boolean,
     default: false,
@@ -29,6 +46,10 @@ const UserSchema = new mongoose.Schema({
   passwordResetToken: String,
   passwordResetTokenExpires: Date,
   createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
     type: Date,
     default: Date.now,
   },
@@ -58,10 +79,24 @@ UserSchema.methods.getEmailVerificationToken = function () {
     .update(verificationToken)
     .digest("hex");
 
-  // Define o tempo de expiração do token (e.g., 10 minutos)
+  // Define o tempo de expiração do token ( 10 minutos)
   this.emailVerificationTokenExpires = Date.now() + 10 * 60 * 1000;
 
   return verificationToken; // Retorna o token original, não o hash
+};
+
+// Método: Gerar token de reset de senha
+UserSchema.methods.getResetPasswordToken = function () {
+  const resetToken = crypto.randomBytes(20).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000; // 10 minutos
+
+  return resetToken;
 };
 
 module.exports = mongoose.model("User", UserSchema);

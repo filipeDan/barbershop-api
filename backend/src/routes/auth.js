@@ -17,30 +17,45 @@ const generateToken = (id) => {
 // @desc    Register a new user and send verification email
 // @access  Public
 router.post("/register", async (req, res) => {
-  const { email, password } = req.body;
+  console.log("Iniciando registro de usuário:", req.body);
+  const { name, email, password, phone } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "Por favor, forneça email e senha." });
+  if (!name || !email || !password) {
+    console.log("Erro: Campos obrigatórios não fornecidos");
+    return res.status(400).json({ message: "Por favor, forneça nome, email e senha." });
   }
 
   try {
+    console.log("Verificando se o usuário já existe:", email);
     let user = await User.findOne({ email });
     if (user) {
+      console.log("Erro: Usuário já existe:", email);
       return res.status(400).json({ message: "Usuário já cadastrado com este email." });
     }
 
+    console.log("Criando novo usuário:", email);
     user = new User({
+      name,
       email,
       password,
+      phone: phone || undefined
     });
 
+    // Gerar token de verificação
+    console.log("Gerando token de verificação para:", email);
     const verificationToken = user.getEmailVerificationToken();
     await user.save();
+    console.log("Usuário salvo com sucesso:", email);
 
-    // Construct verification URL
+    // Construir URL de verificação
     const verifyUrl = `${process.env.API_BASE_URL}/api/auth/verify-email/${verificationToken}`;
+    console.log("URL de verificação gerada:", verifyUrl);
 
-    const message = `
+    // Mensagem em texto plano
+    const plainTextMessage = `Olá ${user.email},\n\nObrigado por se registrar na Barbearia Top!\n\nPor favor, clique no link abaixo para verificar seu endereço de e-mail:\n${verifyUrl}\n\nSe você não se registrou, por favor ignore este email.\n\nAtenciosamente,\nEquipe Barbearia Top`;
+
+    // Mensagem em HTML
+    const htmlMessage = `
       <h2>Olá ${user.email},</h2>
       <p>Obrigado por se registrar na Barbearia Top!</p>
       <p>Por favor, clique no link abaixo para verificar seu endereço de e-mail:</p>
@@ -52,25 +67,30 @@ router.post("/register", async (req, res) => {
     `;
 
     try {
+      console.log("Enviando email de verificação para:", email);
       await sendEmail({
         email: user.email,
         subject: "Verificação de Email - Barbearia Top",
-        html: message,
+        message: plainTextMessage,
+        html: htmlMessage,
       });
+      console.log("Email de verificação enviado com sucesso para:", email);
+
       res.status(201).json({
         success: true,
         message: `Email de verificação enviado para ${user.email}. Por favor, verifique sua caixa de entrada (e spam).`,
       });
     } catch (emailError) {
       console.error("Erro ao enviar email de verificação:", emailError);
-      // Rollback user creation or mark for re-verification if email fails critically
-      // For simplicity here, we inform the user but the account exists unverified.
-      // A more robust solution might delete the user or have a resend verification option.
-      // await User.findByIdAndDelete(user._id);
+      // Limpar tokens de verificação em caso de erro
       user.emailVerificationToken = undefined;
       user.emailVerificationTokenExpires = undefined;
-      await user.save(); 
-      return res.status(500).json({ message: "Usuário registrado, mas houve um erro ao enviar o email de verificação. Tente novamente mais tarde ou contate o suporte." });
+      await user.save();
+      console.log("Tokens de verificação limpos após erro no envio do email");
+      
+      return res.status(500).json({ 
+        message: "Usuário registrado, mas houve um erro ao enviar o email de verificação. Tente novamente mais tarde ou contate o suporte." 
+      });
     }
 
   } catch (error) {

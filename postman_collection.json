@@ -1,0 +1,418 @@
+{
+	"info": {
+		"_postman_id": "barbearia-top-api",
+		"name": "Barbearia Top API",
+		"description": "Coleção de endpoints para a API da Barbearia Top",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Autenticação",
+			"item": [
+				{
+					"name": "Registro de Usuário",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"João Silva\",\n    \"email\": \"joao@email.com\",\n    \"password\": \"senha123\",\n    \"phone\": \"11999999999\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Registra um novo usuário no sistema"
+					}
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"joao@email.com\",\n    \"password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Realiza o login do usuário"
+					}
+				},
+				{
+					"name": "Recuperar Senha",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"joao@email.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/forgot-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "forgot-password"]
+						},
+						"description": "Solicita recuperação de senha"
+					}
+				},
+				{
+					"name": "Verificar Email",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/auth/verify-email?token={{verification_token}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "verify-email"],
+							"query": [
+								{
+									"key": "token",
+									"value": "{{verification_token}}"
+								}
+							]
+						},
+						"description": "Verifica o email do usuário"
+					}
+				}
+			]
+		},
+		{
+			"name": "Usuários",
+			"item": [
+				{
+					"name": "Listar Usuários",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"]
+						},
+						"description": "Lista todos os usuários (apenas admin)"
+					}
+				},
+				{
+					"name": "Atualizar Usuário",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"João Silva Atualizado\",\n    \"phone\": \"11988888888\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_id"
+								}
+							]
+						},
+						"description": "Atualiza dados do usuário"
+					}
+				},
+				{
+					"name": "Atualizar Role",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"barber\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/:id/role",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", ":id", "role"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_id"
+								}
+							]
+						},
+						"description": "Atualiza a role do usuário (apenas admin)"
+					}
+				}
+			]
+		},
+		{
+			"name": "Serviços",
+			"item": [
+				{
+					"name": "Listar Serviços",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/services",
+							"host": ["{{base_url}}"],
+							"path": ["api", "services"]
+						},
+						"description": "Lista todos os serviços disponíveis"
+					}
+				},
+				{
+					"name": "Criar Serviço",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Corte de Cabelo\",\n    \"description\": \"Corte tradicional\",\n    \"price\": 30.00,\n    \"duration\": 30\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/services",
+							"host": ["{{base_url}}"],
+							"path": ["api", "services"]
+						},
+						"description": "Cria um novo serviço (apenas admin)"
+					}
+				},
+				{
+					"name": "Atualizar Serviço",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Corte de Cabelo Premium\",\n    \"price\": 35.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/services/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "services", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "service_id"
+								}
+							]
+						},
+						"description": "Atualiza um serviço existente (apenas admin)"
+					}
+				},
+				{
+					"name": "Deletar Serviço",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/services/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "services", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "service_id"
+								}
+							]
+						},
+						"description": "Remove um serviço (apenas admin)"
+					}
+				}
+			]
+		},
+		{
+			"name": "Agendamentos",
+			"item": [
+				{
+					"name": "Listar Agendamentos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/appointments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments"]
+						},
+						"description": "Lista os agendamentos do usuário"
+					}
+				},
+				{
+					"name": "Criar Agendamento",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": \"service_id\",\n    \"date\": \"2024-03-20T14:00:00.000Z\",\n    \"barberId\": \"barber_id\",\n    \"notes\": \"Corte na máquina 2\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/appointments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments"]
+						},
+						"description": "Cria um novo agendamento"
+					}
+				},
+				{
+					"name": "Atualizar Agendamento",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2024-03-21T15:00:00.000Z\",\n    \"notes\": \"Atualização do agendamento\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/appointments/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "appointment_id"
+								}
+							]
+						},
+						"description": "Atualiza um agendamento existente"
+					}
+				},
+				{
+					"name": "Cancelar Agendamento",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/appointments/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "appointment_id"
+								}
+							]
+						},
+						"description": "Cancela um agendamento"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "seu_token_jwt",
+			"type": "string"
+		}
+	]
+} 
