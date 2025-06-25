@@ -153,4 +153,153 @@ router.delete("/:id", protect, async (req, res) => {
   }
 });
 
+/**
+ * @route   POST /api/users/first-admin
+ * @desc    Criar o primeiro administrador do sistema
+ * @access  Public (apenas se não existir nenhum admin)
+ */
+router.post("/first-admin", async (req, res) => {
+  try {
+    // Verificar se já existe algum administrador
+    const adminCount = await User.countDocuments({ role: "admin" });
+    if (adminCount > 0) {
+      return res.status(403).json({
+        success: false,
+        message: "Já existe um administrador no sistema. Use a rota /api/users/create-admin para criar novos administradores."
+      });
+    }
+
+    const { name, email, password, phone } = req.body;
+
+    // Verificar se o email já está em uso
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Este email já está em uso."
+      });
+    }
+
+    // Criar o primeiro administrador
+    const admin = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: "admin",
+      isVerified: true // Primeiro admin é automaticamente verificado
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Primeiro administrador criado com sucesso",
+      data: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role
+      }
+    });
+
+  } catch (error) {
+    console.error("Erro ao criar primeiro administrador:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erro ao criar primeiro administrador",
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   GET /api/users/admins
+ * @desc    Listar todos os usuários administradores
+ * @access  Private (apenas para administradores)
+ */
+router.get("/admins", protect, async (req, res) => {
+  try {
+    // Verificar se o usuário atual é administrador
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Acesso negado. Apenas administradores podem acessar esta rota."
+      });
+    }
+
+    // Buscar todos os usuários com role "admin"
+    const admins = await User.find({ role: "admin" }).select("-password");
+
+    res.status(200).json({
+      success: true,
+      count: admins.length,
+      data: admins
+    });
+
+  } catch (error) {
+    console.error("Erro ao buscar administradores:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erro ao buscar administradores",
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   POST /api/users/create-admin
+ * @desc    Criar um novo usuário administrador
+ * @access  Private (apenas para administradores)
+ */
+router.post("/create-admin", protect, async (req, res) => {
+  try {
+    // Verificar se o usuário atual é administrador
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Acesso negado. Apenas administradores podem criar outros administradores."
+      });
+    }
+
+    const { name, email, password, phone } = req.body;
+
+    // Verificar se o email já está em uso
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Este email já está em uso."
+      });
+    }
+
+    // Criar novo usuário administrador
+    const admin = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: "admin",
+      isVerified: true // Administradores são automaticamente verificados
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Administrador criado com sucesso",
+      data: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role
+      }
+    });
+
+  } catch (error) {
+    console.error("Erro ao criar administrador:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erro ao criar administrador",
+      error: error.message
+    });
+  }
+});
+
 module.exports = router; 

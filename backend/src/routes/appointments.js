@@ -4,6 +4,11 @@ const { protect } = require("../middleware/authMiddleware");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs"); // Módulo do sistema de arquivos
+const Appointment = require("../models/Appointment");
+const User = require("../models/User");
+const Service = require("../models/Service");
+const sendEmail = require("../services/emailService");
+const generateAppointmentPDF = require("../services/pdfService");
 
 // Certifique-se de que o diretório de upload exista
 const uploadDir = path.join(__dirname, "../../uploads/references");
@@ -36,8 +41,6 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // Limit file size to 5MB
 });
-
-const sendEmail = require("../services/emailService");
 
 // Modelo de Agendamento simulado (mockado) — em um aplicativo real, isso seria um modelo do Mongoose.
 //Por simplicidade, vamos armazenar os agendamentos na memória.
@@ -180,6 +183,122 @@ router.get("/my-appointments", protect, (req, res) => {
     });
 });
 
+/**
+ * @route   POST /api/appointments
+ * @desc    Criar um novo agendamento
+ * @access  Private (requer autenticação)
+ */
+router.post("/", protect, upload.single("referenceImage"), async (req, res) => {
+  try {
+    // Extrair dados do corpo da requisição
+    const { serviceId, date, startTime, endTime, notes } = req.body;
+    const userId = req.user.id; // ID do usuário autenticado
+
+    // Buscar informações do serviço
+    const service = await Service.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({ success: false, message: "Serviço não encontrado" });
+    }
+
+    // Criar o agendamento no banco de dados
+    const appointment = await Appointment.create({
+      user: userId,
+      service: serviceId,
+      date,
+      startTime,
+      endTime,
+      notes,
+      referenceImage: req.file ? `/uploads/references/${req.file.filename}` : null,
+      price: service.price,
+    });
+
+    // Buscar informações do usuário
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Usuário não encontrado" });
+    }
+
+    // Gerar PDF do agendamento
+    const pdfPath = await generateAppointmentPDF(appointment, user);
+
+    // Preparar e enviar email para o cliente
+    const clientEmailMessage = `
+      <h2>Olá ${user.name},</h2>
+      <p>Seu agendamento na Barbearia Top foi confirmado com sucesso!</p>
+      <p><strong>Detalhes do Agendamento:</strong></p>
+      <ul>
+        <li>Serviço: ${service.name}</li>
+        <li>Data: ${new Date(date).toLocaleDateString("pt-BR")}</li>
+        <li>Horário: ${startTime}</li>
+        <li>Valor: R$ ${service.price.toFixed(2)}</li>
+      </ul>
+      <p>Em anexo, você encontrará o comprovante do agendamento com o QR Code para pagamento via PIX.</p>
+      <p>Caso precise cancelar ou reagendar, entre em contato conosco.</p>
+      <br>
+      <p>Atenciosamente,</p>
+      <p>Equipe Barbearia Top</p>
+    `;
+
+    // Enviar email para o cliente com o PDF anexado
+    await sendEmail({
+      email: user.email,
+      subject: "Confirmação de Agendamento - Barbearia Top",
+      html: clientEmailMessage,
+      attachments: [{
+        filename: 'comprovante-agendamento.pdf',
+        path: pdfPath
+      }]
+    });
+
+    // Preparar e enviar email para o administrador
+    const adminEmailMessage = `
+      <h2>Novo Agendamento</h2>
+      <p>Um novo agendamento foi realizado:</p>
+      <p><strong>Detalhes do Agendamento:</strong></p>
+      <ul>
+        <li>Cliente: ${user.name}</li>
+        <li>Email: ${user.email}</li>
+        <li>Telefone: ${user.phone || 'Não informado'}</li>
+        <li>Serviço: ${service.name}</li>
+        <li>Data: ${new Date(date).toLocaleDateString("pt-BR")}</li>
+        <li>Horário: ${startTime}</li>
+        <li>Valor: R$ ${service.price.toFixed(2)}</li>
+      </ul>
+    `;
+
+    // Enviar email para o administrador com o PDF anexado
+    await sendEmail({
+      email: process.env.ADMIN_EMAIL,
+      subject: "Novo Agendamento - Barbearia Top",
+      html: adminEmailMessage,
+      attachments: [{
+        filename: 'comprovante-agendamento.pdf',
+        path: pdfPath
+      }]
+    });
+
+    // Limpar o arquivo PDF após o envio dos emails
+    fs.unlink(pdfPath, (err) => {
+      if (err) console.error('Erro ao deletar arquivo PDF:', err);
+    });
+
+    // Retornar resposta de sucesso
+    res.status(201).json({
+      success: true,
+      message: "Agendamento realizado com sucesso! Um email de confirmação foi enviado.",
+      data: appointment,
+    });
+
+  } catch (error) {
+    // Tratamento de erros
+    console.error("Erro ao criar agendamento:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Erro ao criar agendamento",
+      error: error.message 
+    });
+  }
+});
 
 module.exports = router;
 
